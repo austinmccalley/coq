@@ -231,3 +231,268 @@ Example test_odd1: odd 1 = true.
 Proof. simpl. reflexivity. Qed.
 Example test_odd2: odd 4 = false.
 Proof. simpl. reflexivity. Qed.
+
+Module NatPlayground2.
+
+Fixpoint plus (n : nat) (m : nat) : nat :=
+    match n with
+    | O => m
+    | S n' => S (plus n' m)
+    end.
+
+Fixpoint mut (n m : nat) : nat :=
+    match n with
+    | O => O
+    | S n' => plus m (mut n' m)
+    end.
+
+Example test_mult1: (mut 3 3) = 9.
+Proof. simpl. reflexivity. Qed.
+
+Fixpoint minus (n m : nat) : nat :=
+    match n, m with
+    | O, _ => O
+    | S _, O => n
+    | S n', S m' => minus n' m'
+    end.
+
+End NatPlayground2.
+
+Fixpoint exp (base power : nat) : nat :=
+  match power with
+  | O => S O
+  | S p => mult base (exp base p)
+  end.
+Example test_exp1: (exp 3 3) = 27.
+Proof. simpl. reflexivity. Qed.
+
+Fixpoint factorial (n : nat) : nat := 
+ match n with
+ | O => 1
+ | S n' => mult n (factorial n')
+ end.
+
+Example test_factorial1: (factorial 3) = 6.
+Proof. simpl. reflexivity. Qed.
+Example test_factorial2: (factorial 5) = (mult 10 12).
+Proof. simpl. reflexivity. Qed.
+
+Notation "x + y" := (plus x y)
+                       (at level 50, left associativity)
+                       : nat_scope.
+Notation "x - y" := (minus x y)
+                       (at level 50, left associativity)
+                       : nat_scope.
+Notation "x * y" := (mult x y)
+                       (at level 40, left associativity)
+                       : nat_scope.
+Check ((0 + 1) + 1) : nat.
+
+Fixpoint eqb (n m : nat) : bool :=
+  match n with
+  | O => match m with
+         | O => true
+         | S m' => false
+         end
+  | S n' => match m with
+            | O => false
+            | S m' => eqb n' m'
+            end
+  end.
+
+Fixpoint leb (n m : nat) : bool :=
+  match n with
+  | O => true
+  | S n' =>
+      match m with
+      | O => false
+      | S m' => leb n' m'
+      end
+  end.
+Example test_leb1: leb 2 2 = true.
+Proof. simpl. reflexivity. Qed.
+Example test_leb2: leb 2 4 = true.
+Proof. simpl. reflexivity. Qed.
+Example test_leb3: leb 4 2 = false.
+Proof. simpl. reflexivity. Qed.
+
+Notation "x =? y" := (eqb x y) (at level 70) : nat_scope.
+Notation "x <=? y" := (leb x y) (at level 70) : nat_scope.
+Example test_leb3': (4 <=? 2) = false.
+Proof. simpl. reflexivity. Qed.
+
+(* Less than resulting in a bool *)
+Definition ltb (n m : nat) : bool :=
+  match (n <=? m) with
+  | true => negb (n =? m)
+  | false => false
+  end.
+
+Notation "x <? y" := (ltb x y) (at level 70) : nat_scope.
+
+Example test_ltb1: (ltb 2 2) = false.
+Proof. simpl. reflexivity. Qed.
+Example test_ltb2: (ltb 2 4) = true.
+Proof. simpl. reflexivity. Qed.
+Example test_ltb3: (ltb 4 2) = false.
+Proof. simpl. reflexivity. Qed.
+
+Theorem plus_O_n : forall n : nat, 0 + n = n.
+Proof.
+  intros n. simpl. reflexivity. Qed.
+Theorem plus_O_n' : forall n : nat, 0 + n = n.
+Proof.
+  intros n. reflexivity. Qed.
+
+Theorem plus_O_n'' : forall n : nat, 0 + n = n.
+Proof.
+  intros m. reflexivity. Qed.
+
+Theorem plus_1_l : forall n:nat, 1 + n = S n.
+Proof.
+  intros n. reflexivity. Qed.
+
+Theorem mult_0_l : forall n:nat, 0 * n = 0.
+Proof.
+  intros n. reflexivity. Qed.
+
+Theorem plus_id_example : forall n m : nat,
+(* The arrow is prnounced "implies" *)
+  n = m ->
+  n + n = m + m.
+
+Proof.
+  (* move both quanitifers into the context *)
+  intros n m.
+  (* move the hypothesis into the context *)
+  intros H.
+  (* rewrite the goal using the hypothesis *)
+  rewrite -> H.
+  reflexivity. Qed.
+
+(* Exercise plus_id_exercise *)
+Theorem plus_id_exercise : forall n m o : nat,
+  n = m -> m = o -> n + m = m + o.
+Proof.
+  intros n m o.
+  intros H.
+  intros H'.
+  rewrite -> H.
+  rewrite -> H'.
+  reflexivity. Qed.
+
+Theorem mult_n_0_m_0 : forall p q : nat,
+ (p * 0) + (q * 0) = 0.
+ Proof.
+  intros p q.
+  rewrite <- mult_n_O.
+  rewrite <- mult_n_O.
+  reflexivity. Qed.
+
+Theorem plus_1_neq_0_firsttry : forall n : nat,
+  (n + 1) =? 0 = false.
+Proof.
+  intros n.  destruct n as [| n'] eqn:E.
+  - reflexivity.
+  - reflexivity. Qed.
+
+Theorem negb_involutive : forall b : bool,
+  negb (negb b) = b.
+Proof.
+  intros b. destruct b eqn:E.
+  - reflexivity.
+  - reflexivity. Qed.
+
+Theorem andb_commutative : forall b c, andb b c = andb c b.
+Proof.
+  intros b c. destruct b eqn:Eb.
+  - destruct c eqn:Ec.
+    + reflexivity.
+    + reflexivity.
+  - destruct c eqn:Ec.
+    + reflexivity.
+    + reflexivity.
+Qed.
+
+Theorem andb_commutative' : forall b c, andb b c = andb c b.
+Proof.
+  intros b c. destruct b eqn:Eb.
+  { destruct c eqn:Ec.
+    { reflexivity. }
+    { reflexivity. } }
+  { destruct c eqn:Ec.
+    { reflexivity. }
+    { reflexivity. }
+  }
+Qed.
+
+Theorem andb3_exchange : forall b c d, andb (andb b c) d = andb (andb b d) c.
+Proof.
+  intros b c d. destruct b eqn:Eb.
+  - destruct c eqn:Ec.
+    + destruct d eqn:Ed.
+      * reflexivity.
+      * reflexivity.
+    + destruct d eqn:Ed.
+      * reflexivity.
+      * reflexivity.
+  - destruct c eqn:Ec.
+    + destruct d eqn:Ed.
+      * reflexivity.
+      * reflexivity.
+    + destruct d eqn:Ed.
+      * reflexivity.
+      * reflexivity.
+Qed.
+
+Theorem andb_true_elim2 : forall b c : bool,
+  andb b c = true -> c = true.
+Proof.
+  intros b c H.
+  destruct c.
+    - reflexivity.
+    - rewrite <- H.
+      destruct b.
+      + reflexivity.
+      + reflexivity.
+Qed.
+
+
+Theorem plus_1_neq_0' : forall n : nat,
+  (n + 1) =? 0 = false.
+Proof.
+  intros [|n].
+    - reflexivity.
+    - reflexivity.
+Qed.
+
+Theorem andb_commutative'' : forall b c, andb b c = andb c b.
+Proof.
+  intros [] [].
+    - reflexivity.
+    - reflexivity.
+    - reflexivity.
+    - reflexivity.
+Qed.
+
+Theorem zero_nbeq_plus_1 : forall n : nat,
+  0 =? (n + 1) = false.
+Proof.
+  intros [|n].
+    - reflexivity.
+    - reflexivity.
+Qed.
+
+
+Theorem identity_fn_applied_twice :
+  forall (f : bool -> bool),
+  (forall (x : bool), f x = x) ->
+  forall (b : bool), f (f b) = b.
+Proof.
+  intros f H b.
+  rewrite -> H.
+  rewrite -> H.
+  reflexivity.
+Qed.
+
+
